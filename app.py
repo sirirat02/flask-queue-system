@@ -10,12 +10,17 @@ app = Flask(__name__)
 # CONFIG
 # =========================
 
-app.secret_key = "supersecretkey123"  # เปลี่ยนเป็นค่ายาวๆถ้า deploy จริง
+app.secret_key = os.getenv("SECRET_KEY", "dev-secret-key")
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "mysql+pymysql://root:@localhost/queue_system"
-)
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# แก้ปัญหา postgres:// → postgresql:// (บางครั้ง Render ให้มาแบบเก่า)
+if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# ถ้าไม่มี DATABASE_URL ให้ fallback เป็น SQLite (ตอนรันในเครื่อง)
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite:///queue_system.db"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -218,5 +223,3 @@ def staff_finish(id):
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
-    app.run(host='0.0.0.0', port=5000, debug=True)

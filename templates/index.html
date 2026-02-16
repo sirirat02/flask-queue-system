@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ระบบรับบัตรคิวห้องแลป</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h1>ระบบรับบัตรคิวห้องแลป</h1>
+<p class="subtitle">Queue Card</p>
+<p class="desc">กรุณาเลือกประเภทบริการที่ต้องการ</p>
+
+<div class="grid">
+    {% for qt in queue_types %}
+    <div class="card"onclick="createQueue({{ qt.id }})">
+        <div class="icon">{{ qt.icon }}</div>
+        <h2>คิว {{ qt.code }}</h2>
+        <p>{{ qt.name }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+let isProcessing = false;
+
+function createQueue(queueTypeId) {
+    if (isProcessing) return;
+    isProcessing = true;
+
+    fetch('/create-queue', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ queue_type_id: queueTypeId })
+    })
+    .then(res => res.json())
+    .then(data => {
+        window.location.href = data.redirect;
+    })
+    .finally(() => isProcessing = false);
+}
+</script>
+
+</body>
+</html>

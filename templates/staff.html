@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Staff Queue</title>
+
+<style>
+body {
+    font-family: system-ui, sans-serif;
+    background: #f8fafc;
+    margin: 0;
+    padding: 40px 20px;
+}
+
+/* ===== Header ===== */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1000px;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+h1 {
+    margin: 0;
+}
+
+.subtitle {
+    text-align: center;
+    color: #2563eb;
+    margin-bottom: 24px;
+}
+
+/* ===== Logout Button ===== */
+.logout-btn {
+    background: #ef4444;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.logout-btn:hover {
+    background: #dc2626;
+}
+
+/* ===== Table ===== */
+.queue-table {
+    width: 100%;
+    max-width: 1000px;
+    margin: auto;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+
+.queue-table th,
+.queue-table td {
+    padding: 14px;
+    text-align: center;
+}
+
+.queue-table thead {
+    background: #1e293b;
+    color: white;
+}
+
+.queue-table tbody tr:hover {
+    background: #f1f5f9;
+}
+
+/* ===== Buttons ===== */
+.btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.btn-call {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-finish {
+    background: #16a34a;
+    color: white;
+}
+
+.counter-select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #cbd5f5;
+    margin-right: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <h1>หน้าจัดการคิว (Staff)</h1>
+    <a href="{{ url_for('logout') }}" class="logout-btn">ออกจากระบบ</a>
+</div>
+
+<p class="subtitle">Queue Control Panel</p>
+
+<table class="queue-table">
+<thead>
+<tr>
+    <th>#</th>
+    <th>เลขคิว</th>
+    <th>ประเภท</th>
+    <th>สถานะ</th>
+    <th>จัดการ</th>
+</tr>
+</thead>
+
+<tbody>
+{% for q in queues %}
+<tr>
+    <td>{{ loop.index }}</td>
+    <td>{{ q.queue_code }}</td>
+    <td>{{ q.queue_type.code }}</td>
+    <td>{{ q.status }}</td>
+
+    <td>
+        <select class="counter-select">
+            <option value="ช่อง 1">ช่อง 1</option>
+            <option value="ช่อง 2">ช่อง 2</option>
+            <option value="ช่อง 3">ช่อง 3</option>
+        </select>
+
+        <button class="btn btn-call"
+                data-id="{{ q.id }}"
+                data-code="{{ q.queue_code }}"
+                onclick="callQueue(this)">
+            เรียก
+        </button>
+
+        <button class="btn btn-finish"
+                data-id="{{ q.id }}"
+                onclick="finishQueue(this)">
+            เสร็จ
+        </button>
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+
+<script>
+let thaiVoice = null;
+
+function loadVoice() {
+    const voices = speechSynthesis.getVoices();
+    thaiVoice = voices.find(v => v.lang === 'th-TH') || null;
+}
+speechSynthesis.onvoiceschanged = loadVoice;
+
+function speakQueue(code, counter) {
+    if (!thaiVoice) loadVoice();
+    const msg = new SpeechSynthesisUtterance(
+        `ขอเชิญหมายเลข ${code} ที่${counter} `
+    );
+    msg.lang = 'th-TH';
+    msg.voice = thaiVoice;
+    msg.rate = 0.5;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(msg);
+}
+
+function callQueue(btn) {
+    const id = btn.dataset.id;
+    const code = btn.dataset.code;
+    const counter = btn.parentElement.querySelector('.counter-select').value;
+
+    fetch(`/staff/call/${id}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ counter })
+    })
+    .then(res => {
+        if (!res.ok) throw new Error();
+        speakQueue(code, counter);
+        setTimeout(() => location.reload(), 500);
+    })
+    .catch(() => alert("เรียกคิวไม่สำเร็จ"));
+}
+
+function finishQueue(btn) {
+    const id = btn.dataset.id;
+
+    fetch(`/staff/finish/${id}`, { method: 'POST' })
+    .then(res => {
+        if (!res.ok) throw new Error();
+        location.reload();
+    })
+    .catch(() => alert("ปิดคิวไม่สำเร็จ"));
+}
+</script>
+
+</body>
+</html>

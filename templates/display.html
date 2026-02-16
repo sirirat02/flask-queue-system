@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>เรียกคิว</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    height: 100vh;
+    font-family: system-ui, sans-serif;
+    background: #eef7fb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* การ์ด */
+.card {
+    width: 600px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 12px 30px rgba(0,0,0,.12);
+    overflow: hidden;
+}
+
+/* หัว */
+.header {
+    background: #17a2c4;
+    color: #fff;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 12px;
+}
+
+/* เนื้อหา */
+.content {
+    padding: 20px 28px;
+}
+
+/* แถวคิว */
+.row {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+}
+
+.row + .row {
+    border-top: 1px solid #e5e7eb;
+}
+
+/* คิว */
+.queue {
+    flex: 1;
+    font-size: 48px;
+    font-weight: 700;
+    color: #111;
+}
+
+/* ช่อง */
+.counter {
+    flex: 1;
+    text-align: right;
+    font-size: 32px;
+    font-weight: 600;
+    color: #111;
+}
+
+/* animation */
+.pop {
+    animation: pop .15s ease;
+}
+
+@keyframes pop {
+    50% { transform: scale(1.05); }
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <div class="header">เรียกคิว</div>
+
+    <div class="content" id="queueList">
+        <!-- JS จะใส่คิวล่าสุด 5 คิวตรงนี้ -->
+    </div>
+</div>
+
+<audio id="ding">
+    <source src="/static/ding.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+let lastData = "";
+
+function updateQueue() {
+    fetch("/display/current")
+        .then(r => r.json())
+        .then(d => {
+
+            // รองรับทั้งคิวเดียว และหลายคิว
+            let list = Array.isArray(d) ? d : (d.queue_code ? [d] : []);
+            if (list.length === 0) return;
+
+            // เอาแค่ 5 คิวล่าสุด
+            list = list.slice(0, 5);
+
+            const dataStr = JSON.stringify(list);
+            if (dataStr === lastData) return;
+            lastData = dataStr;
+
+            const box = document.getElementById("queueList");
+            box.innerHTML = "";
+
+            list.forEach(q => {
+                const row = document.createElement("div");
+                row.className = "row pop";
+                row.innerHTML = `
+                    <div class="queue">${q.queue_code}</div>
+                    <div class="counter">${q.counter ?? "-"}</div>
+                `;
+                box.appendChild(row);
+            });
+
+            document.getElementById("ding").play();
+        })
+        .catch(err => console.error(err));
+}
+
+updateQueue();
+setInterval(updateQueue, 3000);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Lab Queue Ticket</title>
+
+<style>
+body {
+    background: #222;
+    font-family: system-ui, sans-serif;
+}
+
+.ticket {
+    width: 300px;
+    background: white;
+    margin: 30px auto;
+    padding: 20px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.queue {
+    font-size: 48px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.type {
+    font-size: 18px;
+    color: #444;
+}
+
+.time {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+img {
+    margin: 15px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="ticket">
+    <h3>Lab Queue</h3>
+    <hr>
+
+    <!-- ✅ แก้ตรงนี้ -->
+    <div class="type">{{ queue.queue_type.name }}</div>
+
+    <div class="queue">{{ queue.queue_code }}</div>
+
+    <img src="/{{ qr_path }}" width="200">
+
+    <hr>
+
+    <div class="time">
+        {{ queue.created_at.strftime('%d/%m/%Y %H:%M:%S') }}
+    </div>
+</div>
+
+</body>
+</html>

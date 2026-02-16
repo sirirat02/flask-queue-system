@@ -58,6 +58,16 @@ class Queue(db.Model):
 # ✅ สร้างตารางหลังจาก model ถูกประกาศแล้ว
 with app.app_context():
     db.create_all()
+
+    # ถ้ายังไม่มีประเภทคิว ให้สร้างค่าเริ่มต้น
+    if QueueType.query.count() == 0:
+        db.session.add_all([
+            QueueType(code='A', name='ตรวจเลือด'),
+            QueueType(code='B', name='ปัสสาวะ / อุจจาระ'),
+            QueueType(code='C', name='รับผลตรวจ'),
+            QueueType(code='D', name='อื่นๆ'),
+        ])
+        db.session.commit()
 # =========================
 # LOGIN SYSTEM
 # =========================

@@ -1,1 +1,1 @@
-FlaskFlask-SQLAlchemygunicornpsycopg2-binary 
+FlaskgunicornFlask-SQLAlchemypsycopg2-binaryqrcodePillow 
